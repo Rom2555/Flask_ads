@@ -54,14 +54,20 @@ with app.app_context():
     db.create_all()
 
 
+@app.route("/ads", methods=["GET"])
+def list_ads():
+    ads = Ad.query.all()
+    return jsonify([ad.to_dict() for ad in ads])
+
+
 @app.route("/ads", methods=["POST"])
 def create_ad():
     data = request.get_json()
     if (
-        not data
-        or "title" not in data
-        or "description" not in data
-        or "owner" not in data
+            not data
+            or "title" not in data
+            or "description" not in data
+            or "owner" not in data
     ):
         return jsonify({"error": "Отсутствуют обязательные поля"}), 400
 

@@ -12,6 +12,9 @@ Content-Type: application/json
 ### Для получения ID выполните запрос выше и скопируйте значение поля "id" из ответа
 GET http://localhost:5000/ads/6
 
+### Тест получения всех объявлений
+GET http://localhost:5000/ads
+
 ### Тест обновления объявления (замените {{ad_id}} на реальный ID)
 PUT http://localhost:5000/ads/6
 Content-Type: application/json
