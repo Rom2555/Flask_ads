@@ -1,8 +1,8 @@
 import os
-from datetime import datetime
 
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func
 
 app = Flask(__name__)
 
@@ -32,7 +32,7 @@ class Ad(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
+    created_at = db.Column(db.DateTime, default=func.now(), nullable=False)
     owner = db.Column(db.String(100), nullable=False)
 
     def to_dict(self):
