@@ -16,7 +16,7 @@ GET http://localhost:5000/ads/6
 GET http://localhost:5000/ads
 
 ### Тест обновления объявления (замените {{ad_id}} на реальный ID)
-PUT http://localhost:5000/ads/6
+PATCH http://localhost:5000/ads/6
 Content-Type: application/json
 
 {
@@ -47,3 +47,64 @@ Content-Type: application/json
 
 ### Тест получения несуществующего объявления
 GET http://localhost:5000/ads/999999
+
+### === Тесты валидации description ===
+
+### Тест создания объявления с пустым description
+POST http://localhost:5000/ads
+Content-Type: application/json
+
+{
+  "title": "Тест с пустым описанием",
+  "description": "",
+  "owner": "Владелец"
+}
+
+### Тест создания объявления со слишком длинным описанием (Точно 505 символов)
+POST http://localhost:5000/ads
+Content-Type: application/json
+
+{
+  "title": "Тест длинного описания",
+  "description": "01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234",
+  "owner": "Владелец"
+}
+
+### === Тесты пагинации ===
+
+### Тест получения объявлений с пагинацией (страница 1, по 3 на странице)
+GET http://localhost:5000/ads?page=1&per_page=3
+
+### Тест получения объявлений с пагинацией (страница 2)
+GET http://localhost:5000/ads?page=2&per_page=3
+
+### === Тесты обновления ===
+
+### Тест частичного обновления (только title)
+PATCH http://localhost:5000/ads/1
+Content-Type: application/json
+
+{
+  "title": "Новый заголовок"
+}
+
+### Тест частичного обновления (только description)
+PATCH http://localhost:5000/ads/1
+Content-Type: application/json
+
+{
+  "description": "Новое описание"
+}
+
+### Тест обновления несуществующего объявления
+PATCH http://localhost:5000/ads/999999
+Content-Type: application/json
+
+{
+  "title": "Несуществующее"
+}
+
+### === Тесты удаления ===
+
+### Тест удаления несуществующего объявления
+DELETE http://localhost:5000/ads/999999
