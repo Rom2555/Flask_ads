@@ -3,7 +3,6 @@ import os
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
-from sqlalchemy.exc import SQLAlchemyError
 
 app = Flask(__name__)
 
@@ -61,21 +60,35 @@ def list_ads():
     per_page = min(per_page, 100)
 
     ads = Ad.query.paginate(page=page, per_page=per_page, error_out=False)
-    return jsonify({
-        "ads": [ad.to_dict() for ad in ads.items],
-        "total": ads.total,
-        "pages": ads.pages,
-        "current_page": page
-    }), 200
+    return (
+        jsonify(
+            {
+                "ads": [ad.to_dict() for ad in ads.items],
+                "total": ads.total,
+                "pages": ads.pages,
+                "current_page": page,
+            }
+        ),
+        200,
+    )
 
 
 # Создать объявление
 @app.route("/ads", methods=["POST"])
 def create_ad():
     data = request.get_json()
-    if not data or "title" not in data or "description" not in data or "owner" not in data:
+    if (
+        not data
+        or "title" not in data
+        or "description" not in data
+        or "owner" not in data
+    ):
         return jsonify({"error": "Отсутствуют обязательные поля"}), 400
-    if not data["title"].strip() or not data["description"].strip() or not data["owner"].strip():
+    if (
+        not data["title"].strip()
+        or not data["description"].strip()
+        or not data["owner"].strip()
+    ):
         return jsonify({"error": "Пустые значения недопустимы"}), 400
     if len(data["title"]) > 200:
         return jsonify({"error": "Заголовок превышает допустимую длину"}), 400
@@ -85,9 +98,9 @@ def create_ad():
         return jsonify({"error": "Имя владельца слишком большое"}), 400
 
     ad = Ad(
-        title=data['title'].strip(),
-        description=data['description'].strip(),
-        owner=data['owner'].strip()
+        title=data["title"].strip(),
+        description=data["description"].strip(),
+        owner=data["owner"].strip(),
     )
     db.session.add(ad)
     db.session.commit()
@@ -111,7 +124,7 @@ def update_ad(ad_id):
         return jsonify({"error": "Объявление не найдено"}), 404
     data = request.get_json()
     if not data:
-        return jsonify({"error":"Нет данных для обновления"}), 400
+        return jsonify({"error": "Нет данных для обновления"}), 400
     if "title" in data and data["title"].strip():
         ad.title = data["title"].strip()
     if "description" in data and data["description"].strip():
