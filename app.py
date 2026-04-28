@@ -84,14 +84,19 @@ def create_ad():
         return jsonify({"error": "Поля должны быть строками"}), 400
 
     title = title.strip()
+    description = description.strip()
     owner = owner.strip()
 
     if len(title) > 200:
         return jsonify({"error": "Заголовок должен быть меньше 200 символов"}), 400
-    if len(owner) > 100:
-        return jsonify({"error": "Имя владельца должно быть меньше 100 символов"}), 400
+    if len(description) > 5000:
+        return jsonify({"error": "Описание должно быть меньше 5000 символов"}), 400
     if len(title) == 0:
         return jsonify({"error": "Заголовок не может быть пустым"}), 400
+    if len(description) == 0:
+        return jsonify({"error": "Описание не может быть пустым"}), 400
+    if len(owner) > 100:
+        return jsonify({"error": "Имя владельца должно быть меньше 100 символов"}), 400
     if len(owner) == 0:
         return jsonify({"error": "Имя владельца не может быть пустым"}), 400
 
@@ -115,7 +120,7 @@ def get_ad(ad_id):
 
 @app.route("/ads/<int:ad_id>", methods=["PUT"])
 def update_ad(ad_id):
-    ad = Ad.query.get(ad_id)
+    ad = db.session.get(Ad, ad_id)
     if ad is None:
         return jsonify({"error": "Объявление не найдено"}), 404
 
@@ -134,7 +139,7 @@ def update_ad(ad_id):
 
 @app.route("/ads/<int:ad_id>", methods=["DELETE"])
 def delete_ad(ad_id):
-    ad = Ad.query.get(ad_id)
+    ad = db.session.get(Ad, ad_id)
     if ad is None:
         return jsonify({"error": "Объявление не найдено"}), 404
 
