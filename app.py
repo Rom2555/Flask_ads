@@ -3,6 +3,7 @@ import os
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
+from sqlalchemy.exc import SQLAlchemyError
 
 app = Flask(__name__)
 
@@ -27,7 +28,6 @@ db = SQLAlchemy(app)
 
 # Модель объявления
 class Ad(db.Model):
-    query = None
     __tablename__ = "ads"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -53,6 +53,7 @@ class Ad(db.Model):
 # Создание таблиц при первом запуске
 with app.app_context():
     db.create_all()
+    print("Количество объявлений:", Ad.query.count())
 
 
 @app.route("/ads", methods=["GET"])
@@ -71,25 +72,42 @@ def list_ads():
 @app.route("/ads", methods=["POST"])
 def create_ad():
     data = request.get_json()
-    if (
-            not data
-            or "title" not in data
-            or "description" not in data
-            or "owner" not in data
-    ):
+
+    if not data or "title" not in data or "description" not in data or "owner" not in data:
         return jsonify({"error": "Отсутствуют обязательные поля"}), 400
 
-    ad = Ad(title=data["title"], description=data["description"], owner=data["owner"])
+    title = data["title"]
+    description = data["description"]
+    owner = data["owner"]
 
-    db.session.add(ad)
-    db.session.commit()
+    if not (isinstance(title, str) and isinstance(description, str) and isinstance(owner, str)):
+        return jsonify({"error": "Поля должны быть строками"}), 400
 
-    return jsonify(ad.to_dict()), 201
+    title = title.strip()
+    owner = owner.strip()
+
+    if len(title) > 200:
+        return jsonify({"error": "Заголовок должен быть меньше 200 символов"}), 400
+    if len(owner) > 100:
+        return jsonify({"error": "Имя владельца должно быть меньше 100 символов"}), 400
+    if len(title) == 0:
+        return jsonify({"error": "Заголовок не может быть пустым"}), 400
+    if len(owner) == 0:
+        return jsonify({"error": "Имя владельца не может быть пустым"}), 400
+
+    try:
+        ad = Ad(title=title, description=description, owner=owner)
+        db.session.add(ad)
+        db.session.commit()
+        return jsonify(ad.to_dict()), 201
+    except SQLAlchemyError:
+        db.session.rollback()
+        return jsonify({"error": "Ошибка при сохранении"}), 500
 
 
 @app.route("/ads/<int:ad_id>", methods=["GET"])
 def get_ad(ad_id):
-    ad = Ad.query.get(ad_id)
+    ad = db.session.get(Ad, ad_id)
     if ad is None:
         return jsonify({"error": "Объявление не найдено"}), 404
     return jsonify(ad.to_dict())
@@ -126,4 +144,4 @@ def delete_ad(ad_id):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
