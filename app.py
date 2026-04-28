@@ -27,6 +27,7 @@ db = SQLAlchemy(app)
 
 # Модель объявления
 class Ad(db.Model):
+    query = None
     __tablename__ = "ads"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -56,8 +57,15 @@ with app.app_context():
 
 @app.route("/ads", methods=["GET"])
 def list_ads():
-    ads = Ad.query.all()
-    return jsonify([ad.to_dict() for ad in ads])
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 10, type=int)
+    ads = Ad.query.paginate(page=page, per_page=per_page, error_out=False)
+    return jsonify({
+        "ads": [ad.to_dict() for ad in ads.items],
+        "total": ads.total,
+        "pages": ads.pages,
+        "current_page": page
+    })
 
 
 @app.route("/ads", methods=["POST"])
