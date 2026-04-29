@@ -10,13 +10,13 @@ Content-Type: application/json
 
 ### Тест получения объявления по ID (замените {{ad_id}} на реальный ID)
 ### Для получения ID выполните запрос выше и скопируйте значение поля "id" из ответа
-GET http://localhost:5000/ads/6
+GET http://localhost:5000/ads/{{ad_id}}
 
 ### Тест получения всех объявлений
 GET http://localhost:5000/ads
 
 ### Тест обновления объявления (замените {{ad_id}} на реальный ID)
-PATCH http://localhost:5000/ads/6
+PATCH http://localhost:5000/ads/{{ad_id}}
 Content-Type: application/json
 
 {
@@ -26,13 +26,7 @@ Content-Type: application/json
 }
 
 ### Тест получения обновленного объявления (замените {{ad_id}} на реальный ID)
-GET http://localhost:5000/ads/6
-
-### Тест удаления объявления (замените {{ad_id}} на реальный ID)
-DELETE http://localhost:5000/ads/6
-
-### Попытка получить удаленное объявление (должно вернуть 404)
-GET http://localhost:5000/ads/6
+GET http://localhost:5000/ads/{{ad_id}}
 
 ### === Тестирование ошибок ===
 
@@ -81,7 +75,7 @@ GET http://localhost:5000/ads?page=2&per_page=3
 ### === Тесты обновления ===
 
 ### Тест частичного обновления (только title)
-PATCH http://localhost:5000/ads/1
+PATCH http://localhost:5000/ads/{{ad_id}}
 Content-Type: application/json
 
 {
@@ -89,7 +83,7 @@ Content-Type: application/json
 }
 
 ### Тест частичного обновления (только description)
-PATCH http://localhost:5000/ads/1
+PATCH http://localhost:5000/ads/{{ad_id}}
 Content-Type: application/json
 
 {
@@ -97,7 +91,7 @@ Content-Type: application/json
 }
 
 ### Тест PATCH с пустым owner (должно вернуть 400)
-PATCH http://localhost:5000/ads/1
+PATCH http://localhost:5000/ads/{{ad_id}}
 Content-Type: application/json
 
 {
@@ -114,6 +108,9 @@ Content-Type: application/json
 }
 
 ### === Тесты удаления ===
+
+### Тест удаления конкретного объявления
+DELETE http://localhost:5000/ads/{{ad_id}}
 
 ### Тест удаления несуществующего объявления
 DELETE http://localhost:5000/ads/999999
