@@ -68,7 +68,7 @@ def validate_ad_data(data, part=False):
         if not desc.strip():
             errors.append("Описание не может быть пустым")
         elif len(desc.strip()) > 300:
-            errors.append("Описание превышает допустимую длину")
+            errors.append("Описание превышает допустимую длину (300)")
         else:
             data["description"] = desc.strip()
 
@@ -77,7 +77,7 @@ def validate_ad_data(data, part=False):
         if not owner.strip():
             errors.append("Имя владельца не может быть пустым")
         elif len(owner.strip()) > 100:
-            errors.append("Имя владельца превышает допустимую длину")
+            errors.append("Имя владельца превышает допустимую длину (100)")
         else:
             data["owner"] = owner.strip()
 
