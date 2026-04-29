@@ -45,9 +45,46 @@ class Ad(db.Model):
         }
 
 
-# Создание таблиц при первом запуске
-with app.app_context():
-    db.create_all()
+def validate_ad_data(data, part=False):
+    """Функция валидации для POST и PATCH запросов"""
+    errors = []
+
+    if not all(isinstance(data.get(k), str) for k in data.keys()):
+        return "Все поля должны быть строками"
+
+    fields_to_check = ["title", "description", "owner"] if not part else data.keys()
+
+    if "title" in fields_to_check:
+        title = data.get("title", "")
+        if not title.strip():
+            errors.append("Заголовок не может быть пустым")
+        elif len(title.strip()) > 200:
+            errors.append("Заголовок превышает допустимую длину (200)")
+        else:
+            data["title"] = title.strip()  # Перезаписываем обрезанным значением
+
+    if "description" in fields_to_check:
+        desc = data.get("description", "")
+        if not desc.strip():
+            errors.append("Описание не может быть пустым")
+        elif len(desc.strip()) > 300:
+            errors.append("Описание превышает допустимую длину")
+        else:
+            data["description"] = desc.strip()
+
+    if "owner" in fields_to_check:
+        owner = data.get("owner", "")
+        if not owner.strip():
+            errors.append("Имя владельца не может быть пустым")
+        elif len(owner.strip()) > 100:
+            errors.append("Имя владельца превышает допустимую длину")
+        else:
+            data["owner"] = owner.strip()
+
+    return "; ".join(errors) if errors else None
+
+
+# *** Роуты ***
 
 
 # Получить список объявлений
@@ -60,47 +97,29 @@ def list_ads():
     per_page = min(per_page, 100)
 
     ads = Ad.query.paginate(page=page, per_page=per_page, error_out=False)
-    return (
-        jsonify(
-            {
-                "ads": [ad.to_dict() for ad in ads.items],
-                "total": ads.total,
-                "pages": ads.pages,
-                "current_page": page,
-            }
-        ),
-        200,
-    )
+    return jsonify({
+        "ads": [ad.to_dict() for ad in ads.items],
+        "total": ads.total,
+        "pages": ads.pages,
+        "current_page": page,
+    }), 200
 
 
 # Создать объявление
 @app.route("/ads", methods=["POST"])
 def create_ad():
     data = request.get_json()
-    if (
-        not data
-        or "title" not in data
-        or "description" not in data
-        or "owner" not in data
-    ):
+    if not data or not all(k in data for k in ("title", "description", "owner")):
         return jsonify({"error": "Отсутствуют обязательные поля"}), 400
-    if (
-        not data["title"].strip()
-        or not data["description"].strip()
-        or not data["owner"].strip()
-    ):
-        return jsonify({"error": "Пустые значения недопустимы"}), 400
-    if len(data["title"]) > 200:
-        return jsonify({"error": "Заголовок превышает допустимую длину"}), 400
-    if len(data["description"]) > 300:
-        return jsonify({"error": "Описание превышает допустимую длину"}), 400
-    if len(data["owner"]) > 100:
-        return jsonify({"error": "Имя владельца слишком большое"}), 400
+
+    error = validate_ad_data(data, part=False)
+    if error:
+        return jsonify({"error": error}), 400
 
     ad = Ad(
-        title=data["title"].strip(),
-        description=data["description"].strip(),
-        owner=data["owner"].strip(),
+        title=data["title"],
+        description=data["description"],
+        owner=data["owner"],
     )
     db.session.add(ad)
     db.session.commit()
@@ -109,6 +128,7 @@ def create_ad():
     return jsonify(ad.to_dict()), 201
 
 
+# Получить одно объявление по ID
 @app.route("/ads/<int:ad_id>", methods=["GET"])
 def get_ad(ad_id):
     ad = db.session.get(Ad, ad_id)
@@ -117,6 +137,7 @@ def get_ad(ad_id):
     return jsonify(ad.to_dict()), 200
 
 
+# Обновить данные одного объявления по ID
 @app.route("/ads/<int:ad_id>", methods=["PATCH"])
 def update_ad(ad_id):
     ad = db.session.get(Ad, ad_id)
@@ -125,17 +146,23 @@ def update_ad(ad_id):
     data = request.get_json()
     if not data:
         return jsonify({"error": "Нет данных для обновления"}), 400
-    if "title" in data and data["title"].strip():
-        ad.title = data["title"].strip()
-    if "description" in data and data["description"].strip():
-        ad.description = data["description"].strip()
-    if "owner" in data and data["owner"].strip():
-        ad.owner = data["owner"].strip()
+
+    error = validate_ad_data(data, part=True)
+    if error:
+        return jsonify({"error": error}), 400
+
+    if "title" in data:
+        ad.title = data["title"]
+    if "description" in data:
+        ad.description = data["description"]
+    if "owner" in data:
+        ad.owner = data["owner"]
 
     db.session.commit()
     return jsonify(ad.to_dict()), 200
 
 
+# Удаление одного объявления по ID
 @app.route("/ads/<int:ad_id>", methods=["DELETE"])
 def delete_ad(ad_id):
     ad = db.session.get(Ad, ad_id)
@@ -144,7 +171,7 @@ def delete_ad(ad_id):
 
     db.session.delete(ad)
     db.session.commit()
-    return jsonify({"message": "Объявление удалено"}), 200
+    return "", 204
 
 
 if __name__ == "__main__":

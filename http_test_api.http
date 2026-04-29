@@ -96,6 +96,15 @@ Content-Type: application/json
   "description": "Новое описание"
 }
 
+### Тест PATCH с пустым owner (должно вернуть 400)
+PATCH http://localhost:5000/ads/1
+Content-Type: application/json
+
+{
+  "owner": "   "
+}
+
+
 ### Тест обновления несуществующего объявления
 PATCH http://localhost:5000/ads/999999
 Content-Type: application/json
