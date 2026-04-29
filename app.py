@@ -87,6 +87,12 @@ def validate_ad_data(data, part=False):
 # *** Роуты ***
 
 
+@app.route("/health", methods=["GET"])
+def health_check():
+    """Эндпоинт для проверки живости сервиса (Docker, Kubernetes и т.д)"""
+    return jsonify({"status": "ok"}), 200
+
+
 # Получить список объявлений
 @app.route("/ads", methods=["GET"])
 def list_ads():
@@ -94,7 +100,7 @@ def list_ads():
     per_page = request.args.get("per_page", 10, type=int)
 
     # Ограничение максимума выдачи и защита от отрицательных значений
-    page  = max(1, page)
+    page = max(1, page)
     per_page = max(1, min(per_page, 100))
 
     ads = Ad.query.paginate(page=page, per_page=per_page, error_out=False)
